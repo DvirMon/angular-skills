@@ -70,6 +70,25 @@ export class Navbar {
 }
 ```
 
+## Constructor Parameter Injection — ⛔ LEGACY, DO NOT USE
+
+> **FORBIDDEN in new code.** Injecting dependencies via constructor parameters is legacy API. Always use `inject()` with class field initializers instead.
+
+```ts
+// ❌ NEVER write this in new code
+@Component({...})
+export class Legacy {
+  constructor(private router: Router, private analytics: AnalyticsLogger) {}
+}
+
+// ✅ ALWAYS write this instead
+@Component({...})
+export class Modern {
+  private router = inject(Router);
+  private analytics = inject(AnalyticsLogger);
+}
+```
+
 ### Where can `inject()` be used? (Injection Context)
 
 You can call `inject()` in an **injection context**. The most common injection contexts are during the construction of a component, directive, or service.

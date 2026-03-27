@@ -30,11 +30,12 @@ export class CustomSlider {
 }
 ```
 
-## Legacy Decorators
+## Legacy Decorators — ⛔ LEGACY, DO NOT USE
 
-`@HostBinding` and `@HostListener` are supported for backwards compatibility but should be avoided in new code.
+> **FORBIDDEN in new code.** `@HostBinding` and `@HostListener` are legacy API. Always use the `host` metadata property instead.
 
 ```ts
+// ❌ NEVER write this in new code
 export class CustomSlider {
   @HostBinding('tabIndex')
   get tabIndex() {
@@ -42,6 +43,19 @@ export class CustomSlider {
   }
 
   @HostListener('keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    /* ... */
+  }
+}
+
+// ✅ ALWAYS write this instead
+@Component({
+  host: {
+    '[tabIndex]': 'disabled ? -1 : 0',
+    '(keydown)': 'onKeyDown($event)',
+  },
+})
+export class CustomSlider {
   onKeyDown(event: KeyboardEvent) {
     /* ... */
   }

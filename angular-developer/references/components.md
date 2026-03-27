@@ -108,10 +108,77 @@ The `@switch` block renders content based on a value. It uses strict equality (`
 state like 'standby' is added }
 ```
 
+## Structural Directives (`*ngIf`, `*ngFor`, `*ngSwitch`) — ⛔ LEGACY, DO NOT USE
+
+> **FORBIDDEN in new code.** `*ngIf`, `*ngFor`, and `*ngSwitch` are legacy structural directives. Always use the built-in `@if`, `@for`, and `@switch` blocks instead.
+
+```html
+<!-- ❌ NEVER write this in new code -->
+<div *ngIf="isAdmin">Admin panel</div>
+<li *ngFor="let item of items">{{ item.name }}</li>
+<div [ngSwitch]="status">
+  <span *ngSwitchCase="'active'">Active</span>
+  <span *ngSwitchDefault>Inactive</span>
+</div>
+
+<!-- ✅ ALWAYS write this instead -->
+@if (isAdmin) { <div>Admin panel</div> }
+<ul>@for (item of items; track item.id) { <li>{{ item.name }}</li> }</ul>
+@switch (status) { @case ('active') { <span>Active</span> } @default { <span>Inactive</span> } }
+```
+
+## `NgModule` — ⛔ LEGACY, DO NOT USE
+
+> **FORBIDDEN in new code.** `NgModule` is legacy API. All components are standalone by default since v19. Never declare components inside an `NgModule`.
+
+```ts
+// ❌ NEVER write this in new code
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+
+// ✅ ALWAYS write this instead
+@Component({
+  selector: 'app-root',
+  imports: [OtherComponent],
+  template: `...`,
+})
+export class AppComponent {}
+```
+
 ## Core Concepts
 
 - **Host Element**: The DOM element that matches the component's selector.
 - **View**: The DOM rendered by the component's template inside the host element.
-- **Standalone**: By default, components are standalone (since Angular 19, `standalone: true` is default). For older versions, `standalone: true` must be explicit or the component must be part of an `NgModule`.
+- **Standalone**: All components are standalone by default (v19+). Do not set `standalone: true` explicitly — it is the default. **Never create `NgModule`-based components** in new code. If you encounter an `NgModule`-based component in an existing file, suggest migrating to standalone as a separate follow-up change.
 - **Component Tree**: Angular applications are structured as a tree of components, where each component can host child components.
 - **Component Naming**: Do not add suffixes the `Component` suffix for Component classes (e.g., AppComponent) unless the project has been configured to use that naming configuration.
+
+## Decorator-based Queries (`@ViewChild`, `@ViewChildren`, `@ContentChild`, `@ContentChildren`) — ⛔ LEGACY, DO NOT USE
+
+> **FORBIDDEN in new code.** Decorator-based query APIs are legacy. Always use the signal-based `viewChild()`, `viewChildren()`, `contentChild()`, and `contentChildren()` functions instead.
+
+```ts
+// ❌ NEVER write this in new code
+import { Component, ViewChild, ViewChildren, ContentChild, ElementRef, QueryList } from '@angular/core';
+
+@Component({...})
+export class Legacy {
+  @ViewChild('canvas') canvas!: ElementRef;
+  @ViewChildren('item') items!: QueryList<ElementRef>;
+  @ContentChild('label') label!: ElementRef;
+}
+
+// ✅ ALWAYS write this instead
+import { Component, viewChild, viewChildren, contentChild, ElementRef } from '@angular/core';
+
+@Component({...})
+export class Modern {
+  canvas = viewChild.required<ElementRef>('canvas');
+  items = viewChildren<ElementRef>('item');
+  label = contentChild<ElementRef>('label');
+}
+```

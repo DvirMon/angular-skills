@@ -78,6 +78,36 @@ The following features are **only available in specific Angular versions**. Do N
 
 ---
 
+## Legacy Syntax Policy (STRICT — applies to all code generation)
+
+The following legacy Angular APIs are **FORBIDDEN in new code**. Never generate them. Never suggest them. Always use the modern equivalent.
+
+| Legacy (NEVER use) | Modern (ALWAYS use) | Notes |
+|---|---|---|
+| `@Input()` decorator | `input()` / `input.required()` | Signal-based, reactive, type-safe |
+| `@Output()` + `EventEmitter` | `output()` | No `EventEmitter` import needed |
+| `@HostBinding()` | `host: { '[prop]': expr }` in metadata | Declarative, co-located |
+| `@HostListener()` | `host: { '(event)': 'handler($event)' }` in metadata | Declarative, co-located |
+| `@ViewChild()` / `@ViewChildren()` | `viewChild()` / `viewChildren()` | Signal-based queries |
+| `@ContentChild()` / `@ContentChildren()` | `contentChild()` / `contentChildren()` | Signal-based queries |
+| `*ngIf` / `*ngFor` / `*ngSwitch` | `@if` / `@for` / `@switch` | Built-in control flow (v17+) |
+| `constructor(private svc: Service)` | `private svc = inject(Service)` | Functional injection |
+| `NgModule` (for new code) | Standalone components | `standalone: true` is default since v19 |
+| `ngOnInit` for signal derivation | `computed()` / `effect()` | Reactive by default |
+| `ngOnDestroy` for cleanup | `DestroyRef.onDestroy()` / `takeUntilDestroyed()` | Prefer modern alternatives; `ngOnDestroy` is not forbidden |
+
+### Refactoring Guidance
+
+When the agent is **editing or working in a file that uses legacy syntax**:
+
+1. **Complete the user's requested task first** using modern syntax only.
+2. **After the task is done**, suggest a follow-up refactoring opportunity:
+   > "This file uses legacy `@Input()` / `@Output()` decorators. Want me to refactor them to signal-based `input()` / `output()` as a separate change?"
+3. **Never mix** — if you add new inputs/outputs to a file with legacy ones, still use the modern API for the new additions. Do not match the file's legacy style.
+4. **Never refactor in the same change** unless the user explicitly asks for it.
+
+---
+
 ## General Guidelines
 
 1. When generating code, follow Angular's style guide and best practices for maintainability and performance. Use the Angular CLI for scaffolding components, services, directives, pipes, and routes to ensure consistency.

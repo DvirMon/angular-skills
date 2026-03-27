@@ -79,11 +79,12 @@ export class CustomCounter {
 <custom-counter [(value)]="myProperty" />
 ```
 
-## Decorator-based Inputs (@Input)
+## Decorator-based Inputs (@Input) — ⛔ LEGACY, DO NOT USE
 
-The legacy API remains supported but is not recommended for new code.
+> **FORBIDDEN in new code.** The `@Input()` decorator is legacy API. Always use `input()` / `input.required()` instead.
 
 ```ts
+// ❌ NEVER write this in new code
 import { Component, Input } from '@angular/core';
 
 @Component({...})
@@ -91,11 +92,20 @@ export class Legacy {
   @Input({ required: true }) value = 0;
   @Input({ transform: trimString }) label = '';
 }
+
+// ✅ ALWAYS write this instead
+import { Component, input } from '@angular/core';
+
+@Component({...})
+export class Modern {
+  value = input.required<number>();
+  label = input('', { transform: trimString });
+}
 ```
 
 ## Best Practices
 
-- **Prefer Signals**: Use `input()` instead of `@Input()` for better reactivity and type safety.
+- **Always use signal inputs**: Use `input()` instead of `@Input()` — this is mandatory, not a preference.
 - **Required Inputs**: Use `input.required()` for mandatory data to get build-time errors.
 - **Pure Transforms**: Ensure input transform functions are pure and statically analyzable.
 - **Avoid Collisions**: Do not use input names that collide with standard DOM properties (e.g., `id`, `title`).

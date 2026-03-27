@@ -62,25 +62,33 @@ const subscription = componentRef.instance.valueChanged.subscribe((val) => {
 subscription.unsubscribe();
 ```
 
-## Decorator-based Outputs (@Output)
+## Decorator-based Outputs (@Output) — ⛔ LEGACY, DO NOT USE
 
-The legacy API uses the `@Output()` decorator with an `EventEmitter`. It remains supported but is not recommended for new code.
+> **FORBIDDEN in new code.** The `@Output()` decorator with `EventEmitter` is legacy API. Always use `output()` instead.
 
 ```ts
+// ❌ NEVER write this in new code
 import { Component, Output, EventEmitter } from '@angular/core';
 
 @Component({...})
 export class LegacyExample {
   @Output() valueChanged = new EventEmitter<number>();
-
-  // With alias
   @Output('customEventName') changed = new EventEmitter<void>();
+}
+
+// ✅ ALWAYS write this instead
+import { Component, output } from '@angular/core';
+
+@Component({...})
+export class ModernExample {
+  valueChanged = output<number>();
+  changed = output<void>({ alias: 'customEventName' });
 }
 ```
 
 ## Best Practices
 
-- **Prefer `output()`**: Use the function-based `output()` instead of `@Output()` and `EventEmitter`.
+- **Always use `output()`**: Use the function-based `output()` instead of `@Output()` and `EventEmitter` — this is mandatory, not a preference.
 - **Naming**: Use `camelCase` for output names. Avoid prefixing with `on` (e.g., use `valueChanged` instead of `onValueChanged`).
 - **No DOM Bubbling**: Angular custom events do not bubble up the DOM tree like native events.
 - **Avoid Collisions**: Do not choose names that collide with native DOM events (like `click` or `submit`).

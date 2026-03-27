@@ -81,3 +81,57 @@ export class Chart {
 4. `read` (Never write here)
 
 _Note: `afterRenderEffect` only runs on the client, never during Server-Side Rendering (SSR)._
+
+## `ngOnInit` for State Derivation — ⛔ LEGACY, DO NOT USE
+
+> **FORBIDDEN in new code.** Using `ngOnInit` to derive or initialize state is legacy API. Always use `computed()` for derived state and `effect()` for side effects instead.
+
+```ts
+// ❌ NEVER write this in new code
+export class Legacy implements OnInit {
+  items: string[] = [];
+  filteredItems: string[] = [];
+
+  ngOnInit() {
+    this.filteredItems = this.items.filter(i => i.length > 3);
+  }
+}
+
+// ✅ ALWAYS write this instead
+export class Modern {
+  items = signal<string[]>([]);
+  filteredItems = computed(() => this.items().filter(i => i.length > 3));
+}
+```
+
+## `ngOnDestroy` for Cleanup — ⚠️ PREFER MODERN ALTERNATIVES
+
+> **Recommended:** Prefer `DestroyRef.onDestroy()` or `takeUntilDestroyed()` over `ngOnDestroy` for cleanup. These are injection-context-aware and more composable. For effect cleanup, use the `onCleanup` callback.
+
+```ts
+// ❌ NEVER write this in new code
+export class Legacy implements OnDestroy {
+  private subscription = this.service.data$.subscribe(d => { /* ... */ });
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+}
+
+// ✅ ALWAYS write this instead — option A: takeUntilDestroyed
+export class Modern {
+  constructor() {
+    this.service.data$.pipe(takeUntilDestroyed()).subscribe(d => { /* ... */ });
+  }
+}
+
+// ✅ ALWAYS write this instead — option B: DestroyRef
+export class ModernB {
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    const sub = this.service.data$.subscribe(d => { /* ... */ });
+    this.destroyRef.onDestroy(() => sub.unsubscribe());
+  }
+}
+```
