@@ -4,33 +4,58 @@ Structured instructions that help AI agents generate correct, idiomatic Angular 
 
 ## Installation
 
-### Claude Code
+### Quick install (recommended)
 
-Copy the skill into your project:
+```bash
+npx angular-skills add
+```
+
+The installer will ask whether to install **project-level** (`.claude/skills/`) or **globally** (`~/.agents/skills/`).
+
+**How it works:**
+
+| File | Strategy | Why |
+|------|----------|-----|
+| `SKILL.md` | Copied once | Edit freely — your changes survive package updates |
+| `references/` | Symlinked | Points to the globally-installed package; `npm update -g angular-skills` refreshes all reference files automatically |
+
+**Keeping references up to date:**
+
+```bash
+npm update -g angular-skills
+```
+
+No re-running the installer — the symlink picks up the new version immediately.
+
+---
+
+### Manual install
+
+#### Claude Code — project-level
 
 ```bash
 cp -r angular-developer/ .claude/skills/angular-developer/
 ```
 
-Or symlink for global use:
+#### Claude Code — global
 
 ```bash
-ln -s "$(pwd)/angular-developer" ~/.claude/skills/angular-developer
+ln -s "$(pwd)/angular-developer" ~/.agents/skills/angular-developer
 ```
 
-### Cursor
+#### Cursor
 
 ```bash
 cp -r angular-developer/ .cursor/skills/angular-developer/
 ```
 
-### GitHub Copilot
+#### GitHub Copilot
 
 ```bash
 cp -r angular-developer/ .github/copilot/skills/angular-developer/
 ```
 
-### Codex
+#### Codex
 
 ```bash
 cp -r angular-developer/ .codex/skills/angular-developer/
