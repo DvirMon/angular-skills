@@ -1,6 +1,6 @@
-# Angular v19 Skills
+# Angular Skills
 
-Structured instructions that help AI agents generate correct, idiomatic Angular v19 code. Built on top of the [official Angular skills](https://github.com/angular/skills) with additional patterns and best practices.
+Structured instructions that help AI coding agents generate correct, idiomatic Angular code. Built on top of the [official Angular skills](https://github.com/angular/skills) with additional patterns and best practices.
 
 ## Installation
 
@@ -10,7 +10,16 @@ Structured instructions that help AI agents generate correct, idiomatic Angular 
 npx angular-skills add
 ```
 
-The installer will ask whether to install **project-level** (`.claude/skills/`) or **globally** (`~/.agents/skills/`).
+The CLI will prompt you to choose which agents to install for. Skills are always installed to the universal directory (`.agents/skills/`), and you can additionally select agent-specific directories:
+
+| Agent | Directory |
+|-------|-----------|
+| Universal (all agents) | `.agents/skills/` |
+| Claude Code | `.claude/skills/` |
+| Cursor | `.cursor/skills/` |
+| GitHub Copilot | `.github/copilot/skills/` |
+| Codex | `.codex/skills/` |
+| And 30+ more... | `.<agent>/skills/` |
 
 **How it works:**
 
@@ -31,16 +40,23 @@ No re-running the installer — the symlink picks up the new version immediately
 
 ### Manual install
 
-#### Claude Code — project-level
+Copy or symlink the skill folder into the relevant agent directory:
+
+#### Universal (all agents)
 
 ```bash
-cp -r angular-developer/ .claude/skills/angular-developer/
+# Global — works across all agents
+ln -s "$(pwd)/angular-developer" ~/.agents/skills/angular-developer
 ```
 
-#### Claude Code — global
+#### Claude Code
 
 ```bash
-ln -s "$(pwd)/angular-developer" ~/.agents/skills/angular-developer
+# Project-level
+cp -r angular-developer/ .claude/skills/angular-developer/
+
+# Global
+ln -s "$(pwd)/angular-developer" ~/.claude/skills/angular-developer
 ```
 
 #### Cursor
@@ -61,6 +77,16 @@ cp -r angular-developer/ .github/copilot/skills/angular-developer/
 cp -r angular-developer/ .codex/skills/angular-developer/
 ```
 
+#### Other agents
+
+Most agents follow the `.<agent>/skills/` convention:
+
+```bash
+cp -r angular-developer/ .<agent>/skills/angular-developer/
+```
+
+---
+
 ## What's Included
 
 A single `angular-developer` skill with modular reference files covering:
@@ -70,8 +96,10 @@ A single `angular-developer` skill with modular reference files covering:
 - **Dependency Injection** — inject(), providers, tokens, hierarchical injectors
 - **Routing** — lazy loading, guards, resolvers, signal-based route params
 - **Forms** — typed reactive forms (default), template-driven forms
-- **HTTP** — httpResource(), resource(), rxResource(), HttpClient, interceptors
-- **Templates** — control flow (@if, @for, @switch), @let, class/style bindings, signal queries
+- **HTTP** — HttpClient, mutations, error handling
+- **Resource APIs** — httpResource(), resource(), rxResource(), loading states
+- **Interceptors** — functional interceptors, auth, error handling
+- **Templates** — control flow (@if, @for, @switch), @let, class/style bindings
 - **Lifecycle** — signals-first lifecycle, DestroyRef, afterNextRender, takeUntilDestroyed
 - **Services** — single responsibility, facade pattern, service state with signals
 - **Directives** — attribute, structural, host directives, composition API
@@ -81,21 +109,23 @@ A single `angular-developer` skill with modular reference files covering:
 - **Tooling** — Angular CLI, MCP server
 - **RxJS Interop** — toSignal(), toObservable(), takeUntilDestroyed()
 
+## Versions
+
+| Folder | Angular Version | Notes |
+|--------|----------------|-------|
+| `angular-developer/` | v20+ (latest) | General Angular projects |
+| `atera-angular-developer/` | v19 | Atera existing projects — Nx, no new project scaffolding |
+
 ## What's Different from the Official Angular Skills
 
-This repo targets **Angular v19** specifically and adds:
+This repo adds:
 
 - **Lifecycle patterns** — signals-first lifecycle model replacing legacy hooks
 - **Service architecture** — facade pattern, signal-based service state
-- **Template best practices** — @let usage, signal queries (viewChild/contentChild), typed form access
+- **Template best practices** — @let usage, typed form access
 - **Directive composition** — host directives, directive composition API patterns
 - **RxJS interop** — bridging signals and observables
-- **Signal naming convention** — `$` prefix for signal fields
-- **Removed v21+ content** — signal forms, features not available in v19
-
-## Angular Version
-
-This skill targets **Angular v19**. Features exclusive to v20+ or v21+ have been removed or clearly marked.
+- **SRP reference docs** — HTTP, resource APIs, and interceptors split into focused files
 
 ## License
 

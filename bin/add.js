@@ -35,8 +35,20 @@ const { execSync } = require('child_process');
 const { join } = require('path');
 const { homedir } = require('os');
 
-const SKILL_NAME = 'angular-developer';
-const PKG_NAME   = 'angular-skills';
+const PKG_NAME = 'angular-skills';
+
+const SKILLS = [
+  {
+    key: '1',
+    name: 'angular-developer',
+    description: 'Angular v20+ — general projects',
+  },
+  {
+    key: '2',
+    name: 'atera-angular-developer',
+    description: 'Angular v19 — Atera existing projects (Nx)',
+  },
+];
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -94,11 +106,11 @@ function resolveSourceRoot() {
 
 // ─── install ─────────────────────────────────────────────────────────────────
 
-async function install(targetBase, label) {
+async function install(targetBase, label, skillName) {
   const sourceRoot       = resolveSourceRoot();
-  const sourceSkillMd    = join(sourceRoot, SKILL_NAME, 'SKILL.md');
-  const sourceReferences = join(sourceRoot, SKILL_NAME, 'references');
-  const targetDir        = join(targetBase, SKILL_NAME);
+  const sourceSkillMd    = join(sourceRoot, skillName, 'SKILL.md');
+  const sourceReferences = join(sourceRoot, skillName, 'references');
+  const targetDir        = join(targetBase, skillName);
   const targetSkillMd    = join(targetDir, 'SKILL.md');
   const targetReferences = join(targetDir, 'references');
 
@@ -191,10 +203,20 @@ async function main() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
 
   console.log('\n  🅰️   Angular Skills Installer\n');
-  console.log('  Skill    : angular-developer');
   console.log('  Strategy : SKILL.md is copied once (edit freely),');
   console.log('             references/ is symlinked and auto-updates with the package.\n');
 
+  // ── Step 1: choose skill ──────────────────────────────────────────────────
+  console.log('  Choose skill:\n');
+  for (const skill of SKILLS) {
+    console.log(`    [${skill.key}]  ${skill.name.padEnd(30)} ${skill.description}`);
+  }
+
+  const skillAnswer = await ask(rl, '\n  Skill (default 1): ') || '1';
+  const selectedSkill = SKILLS.find(s => s.key === skillAnswer) ?? SKILLS[0];
+  console.log(`\n  Skill    : ${selectedSkill.name}\n`);
+
+  // ── Step 2: choose targets ────────────────────────────────────────────────
   console.log('  Choose install targets (comma-separated, e.g. 1,2):\n');
   for (const agent of AGENTS) {
     console.log(`    [${agent.key}]  ${agent.label.padEnd(28)} ${agent.description}`);
@@ -246,7 +268,7 @@ async function main() {
 
   const installed = [];
   for (const target of targets) {
-    const path = await install(target.dir, target.label);
+    const path = await install(target.dir, target.label, selectedSkill.name);
     installed.push(path);
   }
 
