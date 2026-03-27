@@ -100,19 +100,63 @@ updateProfile() {
 }
 ```
 
-## Unified Change Events
+## Reactive State
 
-Modern Angular (v18+) provides a single `events` observable on all controls to track value, status, pristine, touched, reset, and submit events.
+### Observable approach
 
 ```ts
-import {ValueChangeEvent, StatusChangeEvent} from '@angular/forms';
+import { ValueChangeEvent, StatusChangeEvent, TouchedChangeEvent } from '@angular/forms';
 
-this.profileForm.events.subscribe((event) => {
-  if (event instanceof ValueChangeEvent) {
-    console.log('New value:', event.value);
-  }
+// valueChanges — emits every time the control value changes
+this.profileForm.controls.firstName.valueChanges.subscribe(value => {
+  console.log('firstName changed:', value);
+});
+
+// statusChanges — emits 'VALID' | 'INVALID' | 'PENDING' | 'DISABLED'
+this.profileForm.statusChanges.subscribe(status => {
+  console.log('Form status:', status);
+});
+
+// events (v18+) — single stream for all change types on a control or group
+this.profileForm.events.subscribe(event => {
+  if (event instanceof ValueChangeEvent) console.log('value:', event.value);
+  if (event instanceof StatusChangeEvent) console.log('status:', event.status);
+  if (event instanceof TouchedChangeEvent) console.log('touched:', event.touched);
 });
 ```
+
+### Recommended: signal-based approach via `toSignal()`
+
+Wrap the observables with `toSignal()` to consume form state as signals — no subscriptions, no manual cleanup, works natively with `computed()` and templates.
+
+```ts
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ValueChangeEvent, StatusChangeEvent } from '@angular/forms';
+
+// Value as a signal — always reflects the current control value
+$firstName = toSignal(this.form.controls.firstName.valueChanges, {
+  initialValue: this.form.controls.firstName.value,
+});
+
+// Status as a signal
+$formStatus = toSignal(this.form.statusChanges, {
+  initialValue: this.form.status,
+});
+
+// Derived signal — computed from form state
+$isValid = computed(() => this.$formStatus() === 'VALID');
+
+// From the unified events stream — filter to a specific event type
+$lastValue = toSignal(
+  this.form.events.pipe(
+    filter((e): e is ValueChangeEvent<typeof this.form.value> => e instanceof ValueChangeEvent),
+    map(e => e.value),
+  ),
+  { initialValue: this.form.value },
+);
+```
+
+> Always provide `initialValue` to `toSignal()` for form observables — they are synchronous sources and the initial value is always available from `.value` / `.status`.
 
 ## Manual State Management
 

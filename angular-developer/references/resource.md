@@ -1,77 +1,163 @@
-# Async Reactivity with `resource`
+# Async Reactivity with Resource APIs
 
-> [!IMPORTANT]
-> The `resource` API is currently experimental in Angular.
+Signal-based APIs for reactive async data fetching. They expose loading/error state as synchronous signals with no manual subscription management.
 
-A `Resource` incorporates asynchronous data fetching into Angular's signal-based reactivity. It executes an async loader function whenever its dependencies change, exposing the status and result as synchronous signals.
+> **`resource()` and `httpResource()` are currently experimental** — available to use but API may change.
 
-## Basic Usage
+## Choosing the Right Resource API
 
-The `resource` function accepts an options object with two main properties:
+| Use case | API |
+|----------|-----|
+| Simple HTTP GET (with interceptors) | `httpResource()` |
+| Any async task (fetch, Promise, worker) | `resource()` |
+| RxJS Observable-based APIs | `rxResource()` |
 
-1. `params`: A reactive computation (like `computed`). When signals read here change, the resource re-fetches.
-2. `loader`: An async function that fetches data based on the parameters.
+For non-GET mutations or complex operators, use `HttpClient` directly — see [http.md](http.md).
+
+---
+
+## `httpResource()` — Signal-Based HTTP GET
+
+Use when you need HttpClient interceptors and a simple GET. Always use the **function form** for the URL so the request is reactive.
 
 ```ts
-import { Component, resource, signal, computed } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 
-@Component({...})
-export class UserProfile {
-  userId = signal('123');
+// Simple reactive GET
+userResource = httpResource<User>(() => `/api/users/${this.$userId()}`);
 
-  userResource = resource({
-    // Reactively tracking userId
-    params: () => ({ id: this.userId() }),
+// With options
+userResource = httpResource<User>(() => ({
+  url: `/api/users/${this.$userId()}`,
+  headers: { Authorization: `Bearer ${this.$token()}` },
+  params: { include: 'profile' },
+}));
 
-    // Executes whenever params change
-    loader: async ({ params, abortSignal }) => {
-      const response = await fetch(`/api/users/${params.id}`, { signal: abortSignal });
-      if (!response.ok) throw new Error('Network error');
-      return response.json();
-    }
-  });
+// With default value (avoids undefined in template)
+usersResource = httpResource<User[]>(() => '/api/users', { defaultValue: [] });
 
-  // Use the resource value in computed signals
-  userName = computed(() => {
-    if (this.userResource.hasValue()) {
-      return this.userResource.value()?.name;
-    } else {
-      return 'Loading...';
-    }
-  });
+// Skip when not ready — return undefined to pause
+userResource = httpResource<User>(() =>
+  this.$userId() ? `/api/users/${this.$userId()}` : undefined
+);
+```
+
+### Schema Validation
+
+```ts
+httpResource(() => `/api/users/${this.$id()}`, {
+  parse: userSchema.parse, // e.g. Zod schema
+});
+```
+
+---
+
+## `resource()` — Generic Async Data
+
+For non-HTTP async work or custom fetch logic. **Always pass `abortSignal` to `fetch` calls** — the resource will abort the previous request when `params` change.
+
+```ts
+import { resource } from '@angular/core';
+
+searchResource = resource({
+  params: () => ({ q: this.$query() }),
+  loader: async ({ params, abortSignal }) => {
+    const res = await fetch(`/api/search?q=${params.q}`, { signal: abortSignal });
+    return res.json() as Promise<Result[]>;
+  },
+});
+
+// With default value
+todosResource = resource({
+  defaultValue: [] as Todo[],
+  params: () => ({ filter: this.$filter() }),
+  loader: async ({ params }) =>
+    (await fetch(`/api/todos?filter=${params.filter}`)).json(),
+});
+
+// Conditional: return undefined from params to skip
+userResource = resource({
+  params: () => (this.$userId() ? { id: this.$userId()! } : undefined),
+  loader: async ({ params }) =>
+    fetch(`/api/users/${params.id}`).then(r => r.json()),
+});
+```
+
+---
+
+## `rxResource()` — Observable-Based APIs
+
+Use when your service returns `Observable<T>`. Lives in `@angular/core/rxjs-interop`.
+
+```ts
+import { rxResource } from '@angular/core/rxjs-interop';
+
+photo = rxResource({
+  params: this.$photoId,
+  stream: (id) => this.photoService.getPhoto$(id).pipe(
+    catchError(err => { console.error(err); return of(undefined); }),
+  ),
+});
+```
+
+---
+
+## Resource State
+
+All resource APIs expose the same state signals:
+
+```ts
+resource.value()      // Current value or undefined
+resource.hasValue()   // Type-guard boolean — true if a value exists
+resource.error()      // Error thrown by the loader, or undefined
+resource.isLoading()  // boolean
+resource.status()     // 'idle' | 'loading' | 'reloading' | 'resolved' | 'error' | 'local'
+
+resource.reload()     // Force re-run the loader without params changing
+resource.set(value)   // Set a local value — changes status to 'local'
+resource.update(fn)   // Update local value via function
+```
+
+---
+
+## Loading States
+
+Use `@switch` on `status()` for granular UI control:
+
+```html
+@switch (dataResource.status()) {
+  @case ('idle')      { <p>Enter a search term</p> }
+  @case ('loading')   { <app-spinner /> }
+  @case ('reloading') {
+    <app-data [data]="dataResource.value()!" />
+    <app-spinner size="small" />
+  }
+  @case ('resolved')  { <app-data [data]="dataResource.value()!" /> }
+  @case ('error')     {
+    <app-error [error]="dataResource.error()" (retry)="dataResource.reload()" />
+  }
 }
 ```
 
-## Aborting Requests
+---
 
-If the `params` signal changes while a previous loader is still running, the `Resource` will attempt to abort the outstanding request using the provided `abortSignal`. **Always pass `abortSignal` to your `fetch` calls.**
+## Error Handling
 
-## Reloading Data
-
-You can imperatively force the resource to re-run the loader without the params changing by calling `.reload()`.
-
-```ts
-this.userResource.reload();
+```html
+@if (userResource.error(); as error) {
+  <div class="error">
+    <p>{{ getErrorMessage(error) }}</p>
+    <button (click)="userResource.reload()">Retry</button>
+  </div>
+}
 ```
 
-## Resource Status Signals
+---
 
-The `Resource` object provides several signals to read its current state:
+## Guidelines
 
-- `value()`: The resolved data, or `undefined`.
-- `hasValue()`: Type-guard boolean. `true` if a value exists.
-- `isLoading()`: Boolean indicating if the loader is currently running.
-- `error()`: The error thrown by the loader, or `undefined`.
-- `status()`: A string constant representing the exact state (`'idle'`, `'loading'`, `'resolved'`, `'error'`, `'reloading'`, `'local'`).
-
-## Local Mutation
-
-You can optimistically update the resource's value directly. This changes the status to `'local'`.
-
-```ts
-this.userResource.value.set({name: 'Optimistic Update'});
-```
-
-## Reactive Data Fetching with `httpResource`
-
-If you are using Angular's `HttpClient`, prefer using `httpResource`. It is a specialized wrapper that leverages the Angular HTTP stack (including interceptors) while providing the same signal-based resource API.
+- Prefer `httpResource()` for HTTP GETs when interceptors are needed.
+- Prefer `resource()` for `fetch`, workers, or custom async logic.
+- Prefer `rxResource()` when the API is already Observable-based.
+- Do not mix `effect()`, subscriptions, or imperative patching with resource state — use `reload()`, `set()`, or `update()`.
+- Return `undefined` from the `params` / URL function to skip a request when dependencies aren't ready.

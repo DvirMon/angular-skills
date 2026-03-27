@@ -60,8 +60,7 @@ The following features are **only available in specific Angular versions**. Do N
 | `animate.enter` / `animate.leave` | v20.2+ | [angular-animations.md](references/angular-animations.md) |
 | Route View Transitions API | v20.2+ | [route-animations.md](references/route-animations.md) |
 | Native Vitest support (`@angular/build:unit-test`) | v20+ | [testing-fundamentals.md](references/testing-fundamentals.md) |
-| `resource()` API (stable) | v20+ | [resource.md](references/resource.md) |
-| `httpResource()` | v20+ | [resource.md](references/resource.md) |
+| `resource()` / `httpResource()` / `rxResource()` (experimental) | v20+ | [resource.md](references/resource.md) |
 | `linkedSignal()` | v19+ | [linked-signal.md](references/linked-signal.md) |
 | Signal-based inputs (`input()`) | v19+ (stable) | [inputs.md](references/inputs.md) |
 | Signal-based outputs (`output()`) | v19+ (stable) | [outputs.md](references/outputs.md) |
@@ -105,6 +104,18 @@ When the agent is **editing or working in a file that uses legacy syntax**:
    > "This file uses legacy `@Input()` / `@Output()` decorators. Want me to refactor them to signal-based `input()` / `output()` as a separate change?"
 3. **Never mix** — if you add new inputs/outputs to a file with legacy ones, still use the modern API for the new additions. Do not match the file's legacy style.
 4. **Never refactor in the same change** unless the user explicitly asks for it.
+
+### When Asked to Refactor Legacy Code
+
+**Do not rewrite manually.** Angular ships official schematics that perform full-program analysis across TypeScript and templates. Always prefer a schematic over hand-editing.
+
+**Protocol:**
+1. Read the affected `.ts` and `.html` files to identify which legacy patterns are present.
+2. Consult [refactoring.md](references/refactoring.md) to select the correct schematic.
+3. Run the schematic (scoped with `--path` when appropriate).
+4. Run `ng build` to verify no errors were introduced.
+
+Read [refactoring.md](references/refactoring.md) for all available schematics, exact commands, flags, and known limitations.
 
 ---
 
@@ -151,7 +162,9 @@ When working with Angular components, consult the following references based on 
 - **Host Elements**: Host bindings and attribute injection. Read [host-elements.md](references/host-elements.md)
 - **Templates**: Control flow, @let, class/style bindings, signal queries, typed form access. Read [templates.md](references/templates.md)
 - **Lifecycle**: Signals-first lifecycle, DestroyRef, afterNextRender, takeUntilDestroyed. Read [lifecycle.md](references/lifecycle.md)
-- **Directives**: Attribute, structural, host directives, and directive composition API. Read [directives.md](references/directives.md)
+- **Directives**: Attribute, host directives, directive composition API, and the same-name alias convention. Read [directives.md](references/directives.md)
+- **Structural Directives**: Portal, lazy render, typed template outlet, and microsyntax reference. Read [structural-directives.md](references/structural-directives.md)
+- **Refactoring Legacy Code**: All Angular migration schematics (`signal-input-migration`, `output-migration`, `signal-queries-migration`, `inject-migration`, `control-flow-migration`, `standalone-migration`, and more). Read [refactoring.md](references/refactoring.md)
 
 If you require deeper documentation not found in the references above, read the documentation at `https://angular.dev/guide/components`.
 
@@ -214,7 +227,9 @@ If you require deeper documentation or more context, visit the [official Angular
 
 When implementing HTTP and data fetching, consult the following references:
 
-- **HTTP & Resource APIs**: `httpResource()`, `resource()`, `rxResource()`, HttpClient, and interceptors. Read [http.md](references/http.md)
+- **HTTP entry point** (choosing the right API, `HttpClient` mutations, error handling): Read [http.md](references/http.md)
+- **Resource APIs** (`httpResource()`, `resource()`, `rxResource()`, state signals, loading states): Read [resource.md](references/resource.md)
+- **Interceptors** (functional interceptors, auth, error, registration): Read [interceptors.md](references/interceptors.md)
 
 ## Styling and Animations
 

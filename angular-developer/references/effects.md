@@ -15,6 +15,39 @@ Effects are intended for syncing signal state to imperative, non-signal APIs.
 **CRITICAL RULE: DO NOT use effects to propagate state.**
 If you find yourself using `.set()` or `.update()` on a signal _inside_ an effect to keep two signals in sync, you are making a mistake. This causes `ExpressionChangedAfterItHasBeenChecked` errors and infinite loops. **Always use `computed()` or `linkedSignal()` for state derivation.**
 
+## View Effects vs Root Effects
+
+Angular distinguishes two effect categories based on **where the effect is instantiated**:
+
+| Category | Created in | Executes |
+|---|---|---|
+| **View Effect** | Component, directive, pipe, or service tied to a component injector | **Before** its owning component's change detection |
+| **Root Effect** | Root-provided service (`providedIn: 'root'`) | **Before all components** are checked during change detection |
+
+In both cases, if a signal dependency changes *during* the effect's execution, the effect re-runs before change detection continues.
+
+> <!-- TODO: deeper research needed — verify exact scheduling guarantees per context type, and whether view effects observe partial vs full view tree updates. See: https://angular.dev/guide/signals/effect -->
+
+```ts
+// View Effect — scoped to the component lifetime
+@Component({...})
+export class MyComponent {
+  count = signal(0);
+  constructor() {
+    effect(() => console.log(this.count())); // runs before this component's CD
+  }
+}
+
+// Root Effect — lives for the app lifetime
+@Injectable({ providedIn: 'root' })
+export class MyService {
+  count = signal(0);
+  constructor() {
+    effect(() => console.log(this.count())); // runs before all components' CD
+  }
+}
+```
+
 ## Basic Usage
 
 Effects execute asynchronously during the change detection process. They always run at least once.
@@ -80,58 +113,31 @@ export class Chart {
 3. `mixedReadWrite` (Avoid if possible)
 4. `read` (Never write here)
 
-_Note: `afterRenderEffect` only runs on the client, never during Server-Side Rendering (SSR)._
+### Server-Side Rendering (SSR) Caveats
 
-## `ngOnInit` for State Derivation — ⛔ LEGACY, DO NOT USE
+| API | Runs on Server | Runs on Client |
+|---|---|---|
+| `effect()` | ✅ Yes | ✅ Yes |
+| `afterRenderEffect()` | ❌ No | ✅ Yes |
+| `afterNextRender` / `afterEveryRender` | ❌ No | ✅ Yes |
 
-> **FORBIDDEN in new code.** Using `ngOnInit` to derive or initialize state is legacy API. Always use `computed()` for derived state and `effect()` for side effects instead.
+`afterRenderEffect` **never runs during SSR** — it is browser-only, identical to `afterNextRender`/`afterEveryRender` in this regard. Additionally, when a callback does run on the client, components are **not guaranteed to be fully hydrated** before execution. Exercise caution when reading from or writing to the DOM or layout inside these callbacks.
+
+Use plain `effect()` for state/data side effects that must work in both environments. Reserve `afterRenderEffect` exclusively for DOM-dependent work.
+
+> <!-- TODO: deeper research needed — confirm whether `effect()` has any behavioral differences on the server (e.g., scheduling, timing relative to SSR render pipeline). See: https://angular.dev/guide/signals/effect#server-side-rendering-caveats -->
+
+## Effect Cleanup — Use `onCleanup` Callback
+
+When an effect creates a resource (timer, listener, etc.), clean it up with the `onCleanup` callback. Do not reach for `ngOnDestroy`.
 
 ```ts
-// ❌ NEVER write this in new code
-export class Legacy implements OnInit {
-  items: string[] = [];
-  filteredItems: string[] = [];
-
-  ngOnInit() {
-    this.filteredItems = this.items.filter(i => i.length > 3);
-  }
-}
-
-// ✅ ALWAYS write this instead
-export class Modern {
-  items = signal<string[]>([]);
-  filteredItems = computed(() => this.items().filter(i => i.length > 3));
+constructor() {
+  effect((onCleanup) => {
+    const timer = setInterval(() => this.tick(), 1000);
+    onCleanup(() => clearInterval(timer));
+  });
 }
 ```
 
-## `ngOnDestroy` for Cleanup — ⚠️ PREFER MODERN ALTERNATIVES
-
-> **Recommended:** Prefer `DestroyRef.onDestroy()` or `takeUntilDestroyed()` over `ngOnDestroy` for cleanup. These are injection-context-aware and more composable. For effect cleanup, use the `onCleanup` callback.
-
-```ts
-// ❌ NEVER write this in new code
-export class Legacy implements OnDestroy {
-  private subscription = this.service.data$.subscribe(d => { /* ... */ });
-
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
-  }
-}
-
-// ✅ ALWAYS write this instead — option A: takeUntilDestroyed
-export class Modern {
-  constructor() {
-    this.service.data$.pipe(takeUntilDestroyed()).subscribe(d => { /* ... */ });
-  }
-}
-
-// ✅ ALWAYS write this instead — option B: DestroyRef
-export class ModernB {
-  private destroyRef = inject(DestroyRef);
-
-  constructor() {
-    const sub = this.service.data$.subscribe(d => { /* ... */ });
-    this.destroyRef.onDestroy(() => sub.unsubscribe());
-  }
-}
-```
+> **For all `ngOnDestroy` replacement patterns** (`DestroyRef`, `takeUntilDestroyed`, subscription cleanup), see the canonical reference: [lifecycle.md](lifecycle.md).
