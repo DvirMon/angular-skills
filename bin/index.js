@@ -33,6 +33,6 @@ function printHelp() {
 
   Available skills:
     angular-developer               Angular v20+ — general projects
-    v19                             Angular v19 — Atera existing projects (Nx)
+    atera-angular-developer         Angular v19 — Atera existing projects (Nx)
 `);
 }

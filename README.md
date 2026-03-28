@@ -7,7 +7,12 @@ Structured instructions that help AI coding agents generate correct, idiomatic A
 ### Quick install (recommended)
 
 ```bash
-npx angular-skills add
+# Install a specific skill (non-interactive skill selection)
+npx skills add angular-developer
+
+
+# Or run interactively to choose skill and targets
+npx skills add
 ```
 
 The CLI will prompt you to choose which agents to install for. Skills are always installed to the universal directory (`.agents/skills/`), and you can additionally select agent-specific directories:
