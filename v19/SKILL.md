@@ -1,5 +1,5 @@
 ---
-name: atera-angular-developer
+name: angular-dev-v19
 description: Generates Angular code and provides architectural guidance for existing Angular v19 projects. Trigger for best practices on reactivity (signals, linkedSignal, resource), forms, dependency injection, routing, animations, styling (component styles, Tailwind CSS), testing, or CLI tooling.
 license: MIT
 metadata:
@@ -9,7 +9,7 @@ metadata:
   base: angular/skills (Copyright 2026 Google LLC, MIT)
 ---
 
-# Atera Angular Developer Guidelines — v19
+# Angular Developer Guidelines — v19
 
 > **This skill targets existing Angular v19 projects.** All guidance, APIs, and examples are written for v19. Features exclusive to v20+ or v21+ are not included.
 
