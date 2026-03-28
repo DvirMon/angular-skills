@@ -6,19 +6,17 @@
   "author": "Dvir Monajem",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dvir-monajem/angular-skills.git"
+    "url": "https://github.com/DvirMon/angular-skills.git"
   },
   "engines": {
     "node": ">=18"
   },
-  "bin": {
-    "skills": "./bin/index.js",
-    "angular-skills": "./bin/index.js"
+  "scripts": {
+    "build": "node scripts/build-wellknown.mjs"
   },
   "files": [
     "angular-developer",
-    "atera-angular-developer",
-    "bin",
+    "v19",
     "README.md"
   ],
   "keywords": [

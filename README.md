@@ -7,15 +7,14 @@ Structured instructions that help AI coding agents generate correct, idiomatic A
 ### Quick install (recommended)
 
 ```bash
-# Install a specific skill (non-interactive skill selection)
-npx skills add angular-developer
+# From GitHub — works everywhere, no setup required
+npx skills add DvirMon/angular-skills
 
-
-# Or run interactively to choose skill and targets
-npx skills add
+# From the hosted endpoint
+npx skills add https://angular-skills.vercel.app
 ```
 
-The CLI will prompt you to choose which agents to install for. Skills are always installed to the universal directory (`.agents/skills/`), and you can additionally select agent-specific directories:
+The CLI will prompt you to choose which skill and which agents to install for. Skills are always installed to the universal directory (`.agents/skills/`), and you can additionally select agent-specific directories:
 
 | Agent | Directory |
 |-------|-----------|
@@ -26,20 +25,12 @@ The CLI will prompt you to choose which agents to install for. Skills are always
 | Codex | `.codex/skills/` |
 | And 30+ more... | `.<agent>/skills/` |
 
-**How it works:**
-
-| File | Strategy | Why |
-|------|----------|-----|
-| `SKILL.md` | Copied once | Edit freely — your changes survive package updates |
-| `references/` | Symlinked | Points to the globally-installed package; `npm update -g angular-skills` refreshes all reference files automatically |
-
-**Keeping references up to date:**
+**Install a specific skill directly:**
 
 ```bash
-npm update -g angular-skills
+npx skills add DvirMon/angular-skills/angular-developer
+npx skills add DvirMon/angular-skills/v19
 ```
-
-No re-running the installer — the symlink picks up the new version immediately.
 
 ---
 
