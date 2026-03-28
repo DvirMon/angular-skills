@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * angular-skills add
+ * skills add [skill-name]
  *
- * Installs the angular-developer skill into one or more agent directories.
+ * Installs an angular skill into one or more agent directories.
+ * Skill name can be passed as ANGULAR_SKILLS_SKILL env var (set by bin/index.js)
+ * or selected interactively.
  *
  * SKILL.md  → copied once (local customisations survive npm updates)
  * references/ → symlinked to the globally installed package so that
@@ -95,7 +97,7 @@ function resolveSourceRoot() {
   }
 
   const localRoot = join(__dirname, '..');
-  const localSkill = join(localRoot, SKILL_NAME, 'references');
+  const localSkill = join(localRoot, 'angular-developer', 'references');
 
   if (existsSync(localSkill)) {
     return localRoot;
@@ -207,14 +209,27 @@ async function main() {
   console.log('             references/ is symlinked and auto-updates with the package.\n');
 
   // ── Step 1: choose skill ──────────────────────────────────────────────────
-  console.log('  Choose skill:\n');
-  for (const skill of SKILLS) {
-    console.log(`    [${skill.key}]  ${skill.name.padEnd(30)} ${skill.description}`);
-  }
+  let selectedSkill;
+  const envSkill = process.env.ANGULAR_SKILLS_SKILL;
 
-  const skillAnswer = await ask(rl, '\n  Skill (default 1): ') || '1';
-  const selectedSkill = SKILLS.find(s => s.key === skillAnswer) ?? SKILLS[0];
-  console.log(`\n  Skill    : ${selectedSkill.name}\n`);
+  if (envSkill) {
+    selectedSkill = SKILLS.find(s => s.name === envSkill);
+    if (!selectedSkill) {
+      console.error(`\n❌  Unknown skill: "${envSkill}"`);
+      console.error(`    Available: ${SKILLS.map(s => s.name).join(', ')}\n`);
+      rl.close();
+      process.exit(1);
+    }
+    console.log(`  Skill    : ${selectedSkill.name}\n`);
+  } else {
+    console.log('  Choose skill:\n');
+    for (const skill of SKILLS) {
+      console.log(`    [${skill.key}]  ${skill.name.padEnd(30)} ${skill.description}`);
+    }
+    const skillAnswer = await ask(rl, '\n  Skill (default 1): ') || '1';
+    selectedSkill = SKILLS.find(s => s.key === skillAnswer) ?? SKILLS[0];
+    console.log(`\n  Skill    : ${selectedSkill.name}\n`);
+  }
 
   // ── Step 2: choose targets ────────────────────────────────────────────────
   console.log('  Choose install targets (comma-separated, e.g. 1,2):\n');

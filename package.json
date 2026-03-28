@@ -12,10 +12,12 @@
     "node": ">=18"
   },
   "bin": {
-    "angular-skills": "./bin/add.js"
+    "skills": "./bin/index.js",
+    "angular-skills": "./bin/index.js"
   },
   "files": [
     "angular-developer",
+    "atera-angular-developer",
     "bin",
     "README.md"
   ],
