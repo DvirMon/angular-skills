@@ -119,7 +119,7 @@ A single `angular-developer` skill with modular reference files covering:
 | Folder | Angular Version | Notes |
 |--------|----------------|-------|
 | `angular-developer/` | v20+ (latest) | General Angular projects |
-| `atera-angular-developer/` | v19 | Atera existing projects — Nx, no new project scaffolding |
+| `v19/` | v19 | Atera existing projects — Nx, no new project scaffolding |
 
 ## What's Different from the Official Angular Skills
 

@@ -47,7 +47,7 @@ const SKILLS = [
   },
   {
     key: '2',
-    name: 'atera-angular-developer',
+    name: 'v19',
     description: 'Angular v19 — Atera existing projects (Nx)',
   },
 ];
